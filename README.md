@@ -1,1 +1,1 @@
-# CDNC1_222805401_DuongQuocAnhKiet_NguyenChiThien
+# Mining Highly Reliable Dense Subgraphs from Uncertain Graphs
