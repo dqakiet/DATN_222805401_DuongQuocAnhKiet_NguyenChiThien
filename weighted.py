@@ -2,6 +2,7 @@ import numpy as np
 import time
 import itertools
 import heapq
+import random
 
 class Graph:
     def __init__(self) -> None:
@@ -60,20 +61,23 @@ class Graph:
         :param temp_adj_list: The adjacency list used for calculation.
         :return: The expected degree of the given vertex.
         """
-        return sum((weight*prob) for _, weight, prob in temp_adj_list[vertex])
+        return sum((weight * prob) for _, weight, prob in temp_adj_list[vertex])
 
-    def calculate_expected_density(self, vertices: set[str], temp_adj_list: dict[str, list[tuple[str, float]]]) -> float:
+    def calculate_expected_density(self, vertices: set[str],
+                                   temp_adj_list: dict[str, list[tuple[str, float]]]) -> float:
         """
         Calculates the expected density of a subgraph.
         :param vertices: A set of vertices forming the subgraph.
         :param temp_adj_list: The adjacency list used for the calculation.
         :return: The expected density of the subgraph.
         """
-        total_prob = sum((weight*prob) for v in vertices for u, weight, prob in temp_adj_list[v] if u in vertices and u > v)
+        total_prob = sum(
+            (weight * prob) for v in vertices for u, weight, prob in temp_adj_list[v] if u in vertices and u > v)
         return total_prob / len(vertices) if vertices else 0
 
     ### \sum w(e)*p(e) - \beta *mean(w(e))
-    def get_surplus_degree(self, vertex: str, beta: float, temp_adj_list: dict[str, list[tuple[str, float]]], avgweight: float) -> float:
+    def get_surplus_degree(self, vertex: str, beta: float, temp_adj_list: dict[str, list[tuple[str, float]]],
+                           avgweight: float) -> float:
         """
         Calculates the surplus degree of a vertex.
         :param vertex: The vertex whose surplus degree is to be calculated.
@@ -81,9 +85,10 @@ class Graph:
         :param temp_adj_list: The adjacency list used for the calculation.
         :return: The surplus degree of the given vertex.
         """
-        return sum((weight*prob) - (beta*avgweight) for _, weight, prob in temp_adj_list[vertex])
+        return sum((weight * prob) - (beta * avgweight) for _, weight, prob in temp_adj_list[vertex])
 
-    def calculate_surplus_average_degree(self, vertices: set[str], beta: float, temp_adj_list: dict[str, list[tuple[str, float]]], avgweight: float) -> float:
+    def calculate_surplus_average_degree(self, vertices: set[str], beta: float,
+                                         temp_adj_list: dict[str, list[tuple[str, float]]], avgweight: float) -> float:
         """
         Calculates the surplus average degree of a subgraph.
         :param vertices: A set of vertices forming the subgraph.
@@ -96,11 +101,12 @@ class Graph:
         for v in vertices:
             for u, weight, prob in temp_adj_list[v]:
                 if u in vertices and u > v:
-                    total_prob += prob*weight - beta * avgweight
+                    total_prob += prob * weight - beta * avgweight
                     num_edges += 1
         return (total_prob) / len(vertices) if num_edges > 0 else 0
 
-    def get_surplus_degree_2(self, vertex: str, beta: float, temp_adj_list: dict[str, list[tuple[str, float]]]) -> float:
+    def get_surplus_degree_2(self, vertex: str, beta: float,
+                             temp_adj_list: dict[str, list[tuple[str, float]]]) -> float:
         """
         Calculates the surplus degree of a vertex.
         :param vertex: The vertex whose surplus degree is to be calculated.
@@ -108,9 +114,10 @@ class Graph:
         :param temp_adj_list: The adjacency list used for the calculation.
         :return: The surplus degree of the given vertex.
         """
-        return sum((weight*(prob - beta)) for _, weight, prob in temp_adj_list[vertex])
+        return sum((weight * (prob - beta)) for _, weight, prob in temp_adj_list[vertex])
 
-    def calculate_surplus_average_degree_2(self, vertices: set[str], beta: float, temp_adj_list: dict[str, list[tuple[str, float]]]) -> float:
+    def calculate_surplus_average_degree_2(self, vertices: set[str], beta: float,
+                                           temp_adj_list: dict[str, list[tuple[str, float]]]) -> float:
         """
         Calculates the surplus average degree of a subgraph.
         :param vertices: A set of vertices forming the subgraph.
@@ -123,11 +130,11 @@ class Graph:
         for v in vertices:
             for u, weight, prob in temp_adj_list[v]:
                 if u in vertices and u > v:
-                    total_prob += weight*(prob-beta)
+                    total_prob += weight * (prob - beta)
                     num_edges += 1
         return (total_prob) / len(vertices) if num_edges > 0 else 0
 
-    def greedyOβS(self, beta: float) -> tuple[set[str], float]:
+    def greedyObetaS(self, beta: float) -> tuple[set[str], float]:
         """
         Applies a greedy algorithm to find the subgraph with the highest surplus average degree.
         :param beta: The beta value.
@@ -149,9 +156,9 @@ class Graph:
             vertex_to_marker[v] = current_marker
 
         while len(vertices) >= 2:
-            current_density = self.calculate_surplus_average_degree(vertices, beta, temp_adj_list, avgweight)
-            if current_density > best_surplus_avg_degree:
-                best_surplus_avg_degree = current_density
+            current_surplus_avg_degree = self.calculate_surplus_average_degree(vertices, beta, temp_adj_list, avgweight)
+            if current_surplus_avg_degree > best_surplus_avg_degree:
+                best_surplus_avg_degree = current_surplus_avg_degree
                 best_subgraph = set(vertices)
 
             while heap:
@@ -193,7 +200,7 @@ class Graph:
 
         return best_subgraph, round(best_density, 3)
 
-    def greedyOβS_2(self, beta: float) -> tuple[set[str], float]:
+    def greedyObetaS_2(self, beta: float) -> tuple[set[str], float]:
         """
         Applies a greedy algorithm to find the subgraph with the highest surplus average degree.
         :param beta: The beta value.
@@ -215,9 +222,9 @@ class Graph:
             vertex_to_marker[v] = current_marker
 
         while len(vertices) >= 2:
-            current_density = self.calculate_surplus_average_degree_2(vertices, beta, temp_adj_list)
-            if current_density > best_surplus_avg_degree:
-                best_surplus_avg_degree = current_density
+            current_surplus_avg_degree = self.calculate_surplus_average_degree_2(vertices, beta, temp_adj_list)
+            if current_surplus_avg_degree > best_surplus_avg_degree:
+                best_surplus_avg_degree = current_surplus_avg_degree
                 best_subgraph = set(vertices)
 
             while heap:
@@ -239,17 +246,19 @@ class Graph:
         return best_subgraph, round(best_surplus_avg_degree, 3)
 
     def brute_force_search(self) -> tuple[set[str], float]:
+        """
+        Applies a brute force algorithm to find the subgraph with the highest expected density.
+        :return: A tuple containing the set of vertices forming the best subgraph and its expected density
+        """
         best_subgraph = set()
         best_expected_density = 0
         vertices = list(self.adj_list.keys())
 
-        # Xác định tất cả các cạnh
         edges = set()
         for vertex in vertices:
             for neighbor, _, _ in self.adj_list[vertex]:
                 if (vertex, neighbor) not in edges and (neighbor, vertex) not in edges:
                     edges.add((vertex, neighbor))
-        # Xem xét tất cả các tập hợp con của các cạnh
         for r in range(1, len(edges) + 1):
             for edge_subset in itertools.combinations(edges, r):
                 subgraph_vertices = set()
@@ -277,7 +286,7 @@ class Graph:
                     reliability += np.log10(prob)
         return reliability
 
-    def average_edge_probability(self, vertices: set[str]) -> float:
+    def average_edge_weighted_probability(self, vertices: set[str]) -> float:
         """
         Calculates the average edge probability of a subgraph.
         :param vertices: A set of vertices forming the subgraph.
@@ -288,7 +297,7 @@ class Graph:
         for v in vertices:
             for u, weight, prob in self.adj_list[v]:
                 if u in vertices and u > v:
-                    total_prob += prob*weight
+                    total_prob += prob * weight
                     num_edges += 1
         return total_prob / num_edges if num_edges > 0 else 0
 
@@ -300,17 +309,19 @@ class Graph:
         """
         if len(vertices) < 2:
             return 0
-        total_prob = sum((weight*prob) for v in vertices for u, weight, prob in self.adj_list[v] if u in vertices and u > v)
+        total_prob = sum(
+            (weight * prob) for v in vertices for u, weight, prob in self.adj_list[v] if u in vertices and u > v)
         max_edges = len(vertices) * (len(vertices) - 1) / 2
         return total_prob / max_edges
 
-    def edge_probability_std(self, vertices: set[str]) -> float:
+    def edge_weighted_probability_std(self, vertices: set[str]) -> float:
         """
         Calculates the standard deviation of edge probabilities in a subgraph.
         :param vertices: A set of vertices forming the subgraph.
         :return: The standard deviation of edge probabilities in the subgraph.
         """
-        edge_probs = [(weight*prob) for v in vertices for u, weight, prob in self.adj_list[v] if u in vertices and u > v]
+        edge_probs = [(weight * prob) for v in vertices for u, weight, prob in self.adj_list[v] if
+                      u in vertices and u > v]
         return np.std(edge_probs) if edge_probs else 0
 
     def evaluation_metric(self, subgraph: set[str]) -> dict[str, float]:
@@ -320,14 +331,14 @@ class Graph:
         :return: A dictionary of various evaluation metrics for the subgraph.
         """
         eed = self.expected_edge_density(subgraph)
-        aep = self.average_edge_probability(subgraph)
-        eps = self.edge_probability_std(subgraph)
+        aep = self.average_edge_weighted_probability(subgraph)
+        eps = self.edge_weighted_probability_std(subgraph)
         ar = self.adjoint_reliability(subgraph)
 
         return {
             'Expected edge density': round(eed, 3),
-            'Average edge probability': round(aep, 3),
-            'Edge probability std': round(eps, 3),
+            'Average edge weighted probability': round(aep, 3),
+            'Edge weighted probability std': round(eps, 3),
             'Adjoint Reliability': round(ar, 3),
         }
 
@@ -343,53 +354,75 @@ class Graph:
                 if u in vertices and u > v:
                     num_edges += 1
         print("Num Edges:", num_edges)
-        # printed_edges = set()
-        # for vertex in vertices:
-        #     for neighbor, weight, prob in self.adj_list[vertex]:
-        #         if neighbor in vertices and (neighbor, vertex) not in printed_edges:
-        #             print(f"({vertex}, {neighbor}): {weight} {prob}")
-        #             printed_edges.add((vertex, neighbor))
+
+    def print_summarize_graph(self):
+        """
+        Prints details of a graph including its vertices and edges.
+        """
+        num_edges = 0
+        vertices = set(self.adj_list.keys())
+        print("Graph vertices (Total: {}):".format(len(vertices)), vertices)
+        for v in vertices:
+            for u, _, _ in self.adj_list[v]:
+                if u in vertices and u > v:
+                    num_edges += 1
+        print("Num Edges:", num_edges)
+        print("Average edge probability weighted :", self.average_edge_weighted_probability(vertices))
+        printed_edges = set()
+        for vertex in vertices:
+            for neighbor, weight, prob in self.adj_list[vertex]:
+                if neighbor in vertices and (neighbor, vertex) not in printed_edges:
+                    print(f"({vertex}, {neighbor}): {weight} {prob}")
+                    printed_edges.add((vertex, neighbor))
 
 
-# test
-g = Graph()
-# g.add_edge('A', 'B', 40, 0.8)
-# g.add_edge('A', 'C', 10, 0.1)
-# g.add_edge('A', 'D', 70, 0.7)
-# g.add_edge('A', 'E', 90, 0.9)
-# g.add_edge('B', 'D', 20, 0.8)
-# g.add_edge('B', 'E', 50, 0.4)
-# g.add_edge('B', 'F', 10, 0.9)
-# g.add_edge('C', 'D', 20, 0.3)
-# g.add_edge('C', 'F', 30, 0.3)
-# g.add_edge('D', 'E', 80, 0.2)
-# g.add_edge('E', 'F', 60, 0.4)
+# test random graph
+def create_random_graph(num_vertices):
+    """
+    Create a random graph
+    :param num_vertices: Number vertices of graph
+    :return: Object graph with random edges
+    """
+    g = Graph()
 
-def read_file():
-    u = []
-    v = []
-    w = []
-    p = []
-    with open('579138.protein.links.detailed.v12.0.txt', 'r') as f:
-        lines = f.readlines()
-        header = lines[0].split()
-        for line in lines[1:]:
-            parts = line.split()
-            u.append(parts[0])
-            v.append(parts[1])
-            w.append(float(parts[2]))
-            p.append(parts[-1])
-    return u, v, w, p
+    for i in range(num_vertices - 1):
+        weight = random.randint(1, 100)
+        probability = random.random()
+        g.add_edge(chr(65 + i), chr(65 + i + 1), weight, probability)
 
-
-u, v, w, p = read_file()
-for i in range(len(u)):
-    if w[i] == 0.0:
-        w[i] = 0.041*1000
-
-    g.add_edge(u[i],v[i],w[i], int(p[i])/1000)
-
-
+    for i in range(num_vertices):
+        for j in range(i + 2, num_vertices):
+            if random.random() < 0.5:
+                weight = random.randint(1, 100)
+                probability = random.random()
+                g.add_edge(chr(65 + i), chr(65 + j), weight, probability)
+    return g
+g = create_random_graph(6)
+g.print_summarize_graph()
+# def read_file():
+#     u = []
+#     v = []
+#     w = []
+#     p = []
+#     with open('579138.protein.links.detailed.v12.0.txt', 'r') as f:
+#         lines = f.readlines()
+#         header = lines[0].split()
+#         for line in lines[1:]:
+#             parts = line.split()
+#             u.append(parts[0])
+#             v.append(parts[1])
+#             w.append(float(parts[8]))
+#             p.append(parts[-1])
+#     return u, v, w, p
+#
+#
+# u, v, w, p = read_file()
+# for i in range(len(u)):
+#     if w[i] == 0.0:
+#         w[i] = 0.041*1000
+#     g.add_edge(u[i],v[i],w[i], int(p[i])/1000)
+#
+#
 start_time = time.perf_counter()
 best_subgraph_UDS, best_density_UDS = g.greedyUDS()
 end_time = time.perf_counter()
@@ -400,43 +433,46 @@ g.print_subgraph(best_subgraph_UDS)
 print("With expected density:", best_density_UDS)
 eval_UDS = g.evaluation_metric(best_subgraph_UDS)
 print("Evaluation metric: ", eval_UDS)
-
-print("--------------------------------------------------------")
+#
+# print("--------------------------------------------------------")
+# betas = [0.1,0.2,0.3,0.4,0.6,0.8]
+# for beta in betas:
+#     print(beta)
 beta = 0.3
 start_time = time.perf_counter()
-best_subgraph_OβS, best_surplus_avg_degree_OβS = g.greedyOβS(beta)
+best_subgraph_ObetaS, best_surplus_avg_degree_ObetaS = g.greedyObetaS(beta)
 end_time = time.perf_counter()
-execution_time_OβS = end_time - start_time
-print("GreedyUβS time: ", execution_time_OβS)
-print("Best subgraph from GreedyOβS:")
-g.print_subgraph(best_subgraph_OβS)
-print("With surplus average degree:", best_surplus_avg_degree_OβS)
-eval_UβS = g.evaluation_metric(best_subgraph_OβS)
-print("Evaluation metric: ", eval_UβS)
+execution_time_ObetaS = end_time - start_time
+print("GreedyUβS time: ", execution_time_ObetaS)
+print("Best subgraph from GreedyObetaS:")
+g.print_subgraph(best_subgraph_ObetaS)
+print("With surplus average degree:", best_surplus_avg_degree_ObetaS)
+eval_ObetaS = g.evaluation_metric(best_subgraph_ObetaS)
+print("Evaluation metric: ", eval_ObetaS)
 
 print("--------------------------------------------------------")
 start_time = time.perf_counter()
-best_subgraph_OβS, best_surplus_avg_degree_OβS = g.greedyOβS_2(beta)
+best_subgraph_ObetaS_2, best_surplus_avg_degree_ObetaS_2 = g.greedyObetaS_2(beta)
 end_time = time.perf_counter()
-execution_time_OβS_2 = end_time - start_time
-print("GreedyUβS_2 time: ", execution_time_OβS_2)
-print("Best subgraph from GreedyOβS_2:")
-g.print_subgraph(best_subgraph_OβS)
-print("With surplus average degree:", best_surplus_avg_degree_OβS)
-eval_UβS = g.evaluation_metric(best_subgraph_OβS)
-print("Evaluation metric_2: ", eval_UβS)
-print(float(execution_time_UDS), float(execution_time_OβS), float(execution_time_OβS_2))
+execution_time_ObetaS_2 = end_time - start_time
+print("GreedyUβS_2 time: ", execution_time_ObetaS_2)
+print("Best subgraph from GreedyObetaS_2:")
+g.print_subgraph(best_subgraph_ObetaS_2)
+print("With surplus average degree:", best_surplus_avg_degree_ObetaS_2)
+eval_ObetaS_2 = g.evaluation_metric(best_subgraph_ObetaS_2)
+print("Evaluation metric_2: ", eval_ObetaS_2)
+# print(float(execution_time_UDS), float(execution_time_OβS), float(execution_time_OβS_2))
 
-# print("--------------------------------------------------------")
-# start_time = time.perf_counter()
-# best_subgraph_BF, best_density_BF = g.brute_force_search()
-# end_time = time.perf_counter()
-# execution_time_BF = end_time - start_time
-# print("Brute Force time: ", execution_time_BF)
-# print("Best subgraph from Brute Force:")
-# g.print_subgraph(best_subgraph_BF)
-# print("With surplus average degree:", best_density_BF)
-# eval_BF = g.evaluation_metric(best_subgraph_BF)
-# print("Evaluation metric: ", eval_BF)
-#
-# print(float(execution_time_UDS), float(execution_time_OβS), float(execution_time_OβS_2), float(execution_time_BF))
+print("--------------------------------------------------------")
+start_time = time.perf_counter()
+best_subgraph_BF, best_density_BF = g.brute_force_search()
+end_time = time.perf_counter()
+execution_time_BF = end_time - start_time
+print("Brute Force time: ", execution_time_BF)
+print("Best subgraph from Brute Force:")
+g.print_subgraph(best_subgraph_BF)
+print("With surplus average degree:", best_density_BF)
+eval_BF = g.evaluation_metric(best_subgraph_BF)
+print("Evaluation metric: ", eval_BF)
+
+print(float(execution_time_UDS), float(execution_time_ObetaS), float(execution_time_ObetaS_2), float(execution_time_BF))
