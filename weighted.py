@@ -4,6 +4,7 @@ import itertools
 import heapq
 import random
 
+
 class Graph:
     def __init__(self) -> None:
         """
@@ -76,8 +77,7 @@ class Graph:
         return total_prob / len(vertices) if vertices else 0
 
     ### \sum w(e)*p(e) - \beta *mean(w(e))
-    def get_surplus_degree(self, vertex: str, beta: float, temp_adj_list: dict[str, list[tuple[str, float]]],
-                           avgweight: float) -> float:
+    def get_surplus_degree(self, vertex: str, beta: float, temp_adj_list: dict[str, list[tuple[str, float]]]) -> float:
         """
         Calculates the surplus degree of a vertex.
         :param vertex: The vertex whose surplus degree is to be calculated.
@@ -85,10 +85,13 @@ class Graph:
         :param temp_adj_list: The adjacency list used for the calculation.
         :return: The surplus degree of the given vertex.
         """
+        edge_weights = [weight for _, weight, _ in temp_adj_list[vertex]]
+        avgweight = sum(edge_weights) / len(edge_weights) if edge_weights else 0
+
         return sum((weight * prob) - (beta * avgweight) for _, weight, prob in temp_adj_list[vertex])
 
     def calculate_surplus_average_degree(self, vertices: set[str], beta: float,
-                                         temp_adj_list: dict[str, list[tuple[str, float]]], avgweight: float) -> float:
+                                         temp_adj_list: dict[str, list[tuple[str, float]]]) -> float:
         """
         Calculates the surplus average degree of a subgraph.
         :param vertices: A set of vertices forming the subgraph.
@@ -99,6 +102,8 @@ class Graph:
         total_prob = 0
         num_edges = 0
         for v in vertices:
+            edge_weights = [weight for _, weight, _ in temp_adj_list[v]]
+            avgweight = sum(edge_weights) / len(edge_weights) if edge_weights else 0
             for u, weight, prob in temp_adj_list[v]:
                 if u in vertices and u > v:
                     total_prob += prob * weight - beta * avgweight
@@ -134,7 +139,7 @@ class Graph:
                     num_edges += 1
         return (total_prob) / len(vertices) if num_edges > 0 else 0
 
-    def greedyObetaS(self, beta: float) -> tuple[set[str], float]:
+    def greedy_obetas(self, beta: float) -> tuple[set[str], float]:
         """
         Applies a greedy algorithm to find the subgraph with the highest surplus average degree.
         :param beta: The beta value.
@@ -144,19 +149,18 @@ class Graph:
         vertices = set(self.adj_list.keys())
         best_subgraph = set()
         best_surplus_avg_degree = 0
-        avgweight = self.get_mean_weight()
 
         heap = []
         vertex_to_marker = {}
         current_marker = 0
 
         for v in vertices:
-            surplus_degree = self.get_surplus_degree(v, beta, temp_adj_list, avgweight)
+            surplus_degree = self.get_surplus_degree(v, beta, temp_adj_list)
             heapq.heappush(heap, (surplus_degree, v, current_marker))
             vertex_to_marker[v] = current_marker
 
         while len(vertices) >= 2:
-            current_surplus_avg_degree = self.calculate_surplus_average_degree(vertices, beta, temp_adj_list, avgweight)
+            current_surplus_avg_degree = self.calculate_surplus_average_degree(vertices, beta, temp_adj_list)
             if current_surplus_avg_degree > best_surplus_avg_degree:
                 best_surplus_avg_degree = current_surplus_avg_degree
                 best_subgraph = set(vertices)
@@ -173,13 +177,13 @@ class Graph:
             current_marker += 1
             for neighbor in neighbors:
                 if neighbor in vertices:
-                    new_degree = self.get_surplus_degree(neighbor, beta, temp_adj_list, avgweight)
+                    new_degree = self.get_surplus_degree(neighbor, beta, temp_adj_list)
                     heapq.heappush(heap, (new_degree, neighbor, current_marker))
                     vertex_to_marker[neighbor] = current_marker
 
         return best_subgraph, round(best_surplus_avg_degree, 3)
 
-    def greedyUDS(self) -> tuple[set[str], float]:
+    def greedy_uds(self) -> tuple[set[str], float]:
         """
         Applies a greedy algorithm to find the subgraph with the highest expected edge density.
         :return: A tuple containing the set of vertices forming the best subgraph and its expected density.
@@ -200,7 +204,7 @@ class Graph:
 
         return best_subgraph, round(best_density, 3)
 
-    def greedyObetaS_2(self, beta: float) -> tuple[set[str], float]:
+    def greedy_obetas_2(self, beta: float) -> tuple[set[str], float]:
         """
         Applies a greedy algorithm to find the subgraph with the highest surplus average degree.
         :param beta: The beta value.
@@ -239,7 +243,7 @@ class Graph:
             current_marker += 1
             for neighbor in neighbors:
                 if neighbor in vertices:
-                    new_degree = self.get_surplus_degree(neighbor, beta, temp_adj_list, avgweight)
+                    new_degree = self.get_surplus_degree_2(neighbor, beta, temp_adj_list)
                     heapq.heappush(heap, (new_degree, neighbor, current_marker))
                     vertex_to_marker[neighbor] = current_marker
 
@@ -377,102 +381,110 @@ class Graph:
 
 
 # test random graph
-def create_random_graph(num_vertices):
-    """
-    Create a random graph
-    :param num_vertices: Number vertices of graph
-    :return: Object graph with random edges
-    """
+# def create_random_graph(num_vertices):
+#     """
+#     Create a random graph
+#     :param num_vertices: Number vertices of graph
+#     :return: Object graph with random edges
+#     """
+#     g = Graph()
+#
+#     for i in range(num_vertices - 1):
+#         weight = random.randint(1, 100)
+#         probability = random.random()
+#         g.add_edge(chr(65 + i), chr(65 + i + 1), weight, probability)
+#
+#     for i in range(num_vertices):
+#         for j in range(i + 2, num_vertices):
+#             if random.random() < 0.5:
+#                 weight = random.randint(1, 100)
+#                 probability = random.random()
+#                 g.add_edge(chr(65 + i), chr(65 + j), weight, probability)
+#     return g
+#
+#
+# g = create_random_graph(6)
+# g.print_summarize_graph()
+
+g = Graph()
+
+
+def read_file(n):
+    u = []
+    v = []
+    w = []
+    p = []
+    with open('579138.protein.links.detailed.v12.0.txt', 'r') as f:
+        lines = f.readlines()
+        header = lines[0].split()
+        for line in lines[1:]:
+            parts = line.split()
+            u.append(parts[0])
+            v.append(parts[1])
+            w.append(float(parts[n]))
+            p.append(parts[-1])
+    return u, v, w, p
+
+
+for i in range(2, 9, 1):
     g = Graph()
+    print("*******************************************************")
+    print(i)
+    u, v, w, p = read_file(i)
+    for j in range(len(u)):
+        if w[j] == 0.0:
+            w[j] = 0.041 * 1000
+        g.add_edge(u[j], v[j], w[j], int(p[j]) / 1000)
 
-    for i in range(num_vertices - 1):
-        weight = random.randint(1, 100)
-        probability = random.random()
-        g.add_edge(chr(65 + i), chr(65 + i + 1), weight, probability)
+    start_time = time.perf_counter()
+    best_subgraph_uds, best_density_uds = g.greedy_uds()
+    end_time = time.perf_counter()
+    execution_time_uds = end_time - start_time
+    print("GreedyUDS time: ", execution_time_uds)
+    print("Best subgraph from GreedyUDS:")
+    g.print_subgraph(best_subgraph_uds)
+    print("With expected density:", best_density_uds)
+    eval_uds = g.evaluation_metric(best_subgraph_uds)
+    print("Evaluation metric: ", eval_uds)
+    #
+    print("--------------------------------------------------------")
+    betas = [0.1, 0.2, 0.3, 0.4, 0.6, 0.8]
+    for beta in betas:
+        print(beta)
+        start_time = time.perf_counter()
+        best_subgraph_obetas, best_surplus_avg_degree_obetas = g.greedy_obetas(beta)
+        end_time = time.perf_counter()
+        execution_time_obetas = end_time - start_time
+        print("GreedyUβS time: ", execution_time_obetas)
+        print("Best subgraph from GreedyObetaS:")
+        g.print_subgraph(best_subgraph_obetas)
+        print("With surplus average degree:", best_surplus_avg_degree_obetas)
+        eval_obetas = g.evaluation_metric(best_subgraph_obetas)
+        print("Evaluation metric: ", eval_obetas)
 
-    for i in range(num_vertices):
-        for j in range(i + 2, num_vertices):
-            if random.random() < 0.5:
-                weight = random.randint(1, 100)
-                probability = random.random()
-                g.add_edge(chr(65 + i), chr(65 + j), weight, probability)
-    return g
-g = create_random_graph(6)
-g.print_summarize_graph()
-# def read_file():
-#     u = []
-#     v = []
-#     w = []
-#     p = []
-#     with open('579138.protein.links.detailed.v12.0.txt', 'r') as f:
-#         lines = f.readlines()
-#         header = lines[0].split()
-#         for line in lines[1:]:
-#             parts = line.split()
-#             u.append(parts[0])
-#             v.append(parts[1])
-#             w.append(float(parts[8]))
-#             p.append(parts[-1])
-#     return u, v, w, p
-#
-#
-# u, v, w, p = read_file()
-# for i in range(len(u)):
-#     if w[i] == 0.0:
-#         w[i] = 0.041*1000
-#     g.add_edge(u[i],v[i],w[i], int(p[i])/1000)
-#
-#
-start_time = time.perf_counter()
-best_subgraph_UDS, best_density_UDS = g.greedyUDS()
-end_time = time.perf_counter()
-execution_time_UDS = end_time - start_time
-print("GreedyUDS time: ", execution_time_UDS)
-print("Best subgraph from GreedyUDS:")
-g.print_subgraph(best_subgraph_UDS)
-print("With expected density:", best_density_UDS)
-eval_UDS = g.evaluation_metric(best_subgraph_UDS)
-print("Evaluation metric: ", eval_UDS)
-#
+        print("--------------------------------------------------------")
+        start_time = time.perf_counter()
+        best_subgraph_obetas_2, best_surplus_avg_degree_obetas_2 = g.greedy_obetas_2(beta)
+        end_time = time.perf_counter()
+        execution_time_obetas_2 = end_time - start_time
+        print("GreedyUβS_2 time: ", execution_time_obetas_2)
+        print("Best subgraph from GreedyObetaS_2:")
+        g.print_subgraph(best_subgraph_obetas_2)
+        print("With surplus average degree:", best_surplus_avg_degree_obetas_2)
+        eval_obetas_2 = g.evaluation_metric(best_subgraph_obetas_2)
+        print("Evaluation metric_2: ", eval_obetas_2)
+        print(float(execution_time_uds), float(execution_time_obetas), float(execution_time_obetas_2))
+
 # print("--------------------------------------------------------")
-# betas = [0.1,0.2,0.3,0.4,0.6,0.8]
-# for beta in betas:
-#     print(beta)
-beta = 0.3
-start_time = time.perf_counter()
-best_subgraph_ObetaS, best_surplus_avg_degree_ObetaS = g.greedyObetaS(beta)
-end_time = time.perf_counter()
-execution_time_ObetaS = end_time - start_time
-print("GreedyUβS time: ", execution_time_ObetaS)
-print("Best subgraph from GreedyObetaS:")
-g.print_subgraph(best_subgraph_ObetaS)
-print("With surplus average degree:", best_surplus_avg_degree_ObetaS)
-eval_ObetaS = g.evaluation_metric(best_subgraph_ObetaS)
-print("Evaluation metric: ", eval_ObetaS)
-
-print("--------------------------------------------------------")
-start_time = time.perf_counter()
-best_subgraph_ObetaS_2, best_surplus_avg_degree_ObetaS_2 = g.greedyObetaS_2(beta)
-end_time = time.perf_counter()
-execution_time_ObetaS_2 = end_time - start_time
-print("GreedyUβS_2 time: ", execution_time_ObetaS_2)
-print("Best subgraph from GreedyObetaS_2:")
-g.print_subgraph(best_subgraph_ObetaS_2)
-print("With surplus average degree:", best_surplus_avg_degree_ObetaS_2)
-eval_ObetaS_2 = g.evaluation_metric(best_subgraph_ObetaS_2)
-print("Evaluation metric_2: ", eval_ObetaS_2)
-# print(float(execution_time_UDS), float(execution_time_OβS), float(execution_time_OβS_2))
-
-print("--------------------------------------------------------")
-start_time = time.perf_counter()
-best_subgraph_BF, best_density_BF = g.brute_force_search()
-end_time = time.perf_counter()
-execution_time_BF = end_time - start_time
-print("Brute Force time: ", execution_time_BF)
-print("Best subgraph from Brute Force:")
-g.print_subgraph(best_subgraph_BF)
-print("With surplus average degree:", best_density_BF)
-eval_BF = g.evaluation_metric(best_subgraph_BF)
-print("Evaluation metric: ", eval_BF)
-
-print(float(execution_time_UDS), float(execution_time_ObetaS), float(execution_time_ObetaS_2), float(execution_time_BF))
+# start_time = time.perf_counter()
+# best_subgraph_BF, best_density_BF = g.brute_force_search()
+# end_time = time.perf_counter()
+# execution_time_BF = end_time - start_time
+# print("Brute Force time: ", execution_time_BF)
+# print("Best subgraph from Brute Force:")
+# g.print_subgraph(best_subgraph_BF)
+# print("With surplus average degree:", best_density_BF)
+# eval_BF = g.evaluation_metric(best_subgraph_BF)
+# print("Evaluation metric: ", eval_BF)
+#
+# print(float(execution_time_UDS), float(execution_time_ObetaS), float(execution_time_ObetaS_2), float(execution_time_BF))
