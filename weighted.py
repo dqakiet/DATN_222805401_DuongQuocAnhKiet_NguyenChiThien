@@ -320,13 +320,26 @@ class Graph:
 
     def edge_weighted_probability_std(self, vertices: set[str]) -> float:
         """
-        Calculates the standard deviation of edge probabilities in a subgraph.
+        Calculates the weighted standard deviation of edge probabilities in a subgraph.
         :param vertices: A set of vertices forming the subgraph.
-        :return: The standard deviation of edge probabilities in the subgraph.
+        :return: The weighted standard deviation of edge probabilities in the subgraph.
         """
-        edge_probs = [(weight * prob) for v in vertices for u, weight, prob in self.adj_list[v] if
-                      u in vertices and u > v]
-        return np.std(edge_probs) if edge_probs else 0
+        edge_values = []
+        weights = []
+
+        for v in vertices:
+            for u, weight, prob in self.adj_list[v]:
+                if u in vertices and u > v:
+                    edge_prob = weight * prob
+                    edge_values.append(edge_prob)
+                    weights.append(weight)
+
+        if edge_values:
+            average = np.average(edge_values, weights=weights)
+            variance = np.average((edge_values - average) ** 2, weights=weights)
+            return np.sqrt(variance)
+        else:
+            return 0
 
     def evaluation_metric(self, subgraph: set[str]) -> dict[str, float]:
         """
@@ -353,10 +366,7 @@ class Graph:
         """
         num_edges = 0
         print("Subgraph vertices (Total: {}):".format(len(vertices)), vertices)
-        for v in vertices:
-            for u, _, _ in self.adj_list[v]:
-                if u in vertices and u > v:
-                    num_edges += 1
+        num_edges = len({(u, v) for v in vertices for u, _, _ in self.adj_list[v] if u in vertices and v in vertices and u > v})
         print("Num Edges:", num_edges)
 
     def print_summarize_graph(self):
