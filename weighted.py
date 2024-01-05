@@ -1,8 +1,8 @@
-import numpy as np
 import time
 import itertools
 import heapq
 import random
+import math
 
 
 class Graph:
@@ -10,7 +10,7 @@ class Graph:
         """
         Initializes an instance of the Graph class.
         """
-        self.adj_list: dict[str, list[tuple[str, float]]] = {}
+        self.adj_list: dict[str, list[tuple[str, float, float]]] = {}
 
     def add_vertex(self, vertex: str) -> None:
         """
@@ -116,6 +116,7 @@ class Graph:
 
         while len(vertices) >= 2:
             current_surplus_avg_degree = self.calculate_surplus_average_degree(vertices, beta, temp_adj_list)
+            print(current_surplus_avg_degree)
             if current_surplus_avg_degree > best_surplus_avg_degree:
                 best_surplus_avg_degree = current_surplus_avg_degree
                 best_subgraph = set(vertices)
@@ -247,15 +248,8 @@ class Graph:
                     total_weight += weight
         if not edge_values:
             return 0
-        weighted_average = sum(weight * value for weight, value in zip(weights, edge_values)) / total_weight
-        weighted_variance = sum(
-            weight * ((value - weighted_average) ** 2) for weight, value in zip(weights, edge_values)) / total_weight
-        return math.sqrt(weighted_variance)
-
-        weighted_average = sum(weight * value for weight, value in zip(weights, edge_values)) / total_weight
-        weighted_variance_sum = sum(
-            weight * ((value - weighted_average) ** 2) for weight, value in zip(weights, edge_values))
-        weighted_variance = weighted_variance_sum / total_weight
+        weighted_average = sum(weights[i] * edge_values[i] for i in range(len(edge_values))) / total_weight
+        weighted_variance = sum(weights[i] * ((edge_values[i] - weighted_average) ** 2) for i in range(len(edge_values))) / total_weight
 
         return math.sqrt(weighted_variance)
 
@@ -314,85 +308,119 @@ class Graph:
 
 
 # test random graph
-# def create_random_graph(num_vertices):
-#     """
-#     Create a random graph
-#     :param num_vertices: Number vertices of graph
-#     :return: Object graph with random edges
-#     """
-#     g = Graph()
-#
-#     for i in range(num_vertices - 1):
-#         weight = random.randint(1, 100)
-#         probability = random.random()
-#         g.add_edge(chr(65 + i), chr(65 + i + 1), weight, probability)
-#
-#     for i in range(num_vertices):
-#         for j in range(i + 2, num_vertices):
-#             if random.random() < 0.5:
-#                 weight = random.randint(1, 100)
-#                 probability = random.random()
-#                 g.add_edge(chr(65 + i), chr(65 + j), weight, probability)
-#     return g
+def create_random_graph(num_vertices):
+    """
+    Create a random graph
+    :param num_vertices: Number vertices of graph
+    :return: Object graph with random edges
+    """
+    g = Graph()
+
+    for i in range(num_vertices - 1):
+        weight = random.randint(1, 100)
+        probability = random.random()
+        g.add_edge(chr(65 + i), chr(65 + i + 1), weight, probability)
+
+    for i in range(num_vertices):
+        for j in range(i + 2, num_vertices):
+            if random.random() < 0.5:
+                weight = random.randint(1, 100)
+                probability = random.random()
+                g.add_edge(chr(65 + i), chr(65 + j), weight, probability)
+    return g
+
 
 # g = create_random_graph(6)
 # g.print_summarize_graph()
 
 g = Graph()
-
-
-def read_file(n):
-    u = []
-    v = []
-    w = []
-    p = []
-    with open('579138.protein.links.detailed.v12.0.txt', 'r') as f:
-        lines = f.readlines()
-        header = lines[0].split()
-        for line in lines[1:]:
-            parts = line.split()
-            u.append(parts[0])
-            v.append(parts[1])
-            w.append(float(parts[n]))
-            p.append(parts[-1])
-    return u, v, w, p
-
-
-for i in range(2, 9, 1):
-    g = Graph()
-    print("*******************************************************")
-    print(i)
-    u, v, w, p = read_file(i)
-    for j in range(len(u)):
-        if w[j] == 0.0:
-            w[j] = 0.041 * 1000
-        g.add_edge(u[j], v[j], w[j], int(p[j]) / 1000)
-
-    start_time = time.perf_counter()
-    best_subgraph_uds, best_density_uds = g.greedy_uds()
-    end_time = time.perf_counter()
-    execution_time_uds = end_time - start_time
-    print("GreedyUDS time: ", execution_time_uds)
-    print("Best subgraph from GreedyUDS:")
-    g.print_subgraph(best_subgraph_uds)
-    print("With expected density:", best_density_uds)
-    vertices_uds, num_edge_uds, eval_uds = g.evaluation_metric(best_subgraph_uds)
-    print("Evaluation metric: ", eval_uds)
-
-    print("--------------------------------------------------------")
-    betas = [0.1, 0.2, 0.3, 0.4, 0.6, 0.8]
-    for beta in betas:
-        print(beta)
-        start_time = time.perf_counter()
-        best_subgraph_obetas, best_surplus_avg_degree_obetas = g.greedy_obetas(beta)
-        end_time = time.perf_counter()
-        execution_time_obetas = end_time - start_time
-        print("GreedyUβS time: ", execution_time_obetas)
-        print("Best subgraph from GreedyObetaS:")
-        g.print_subgraph(best_subgraph_obetas)
-        print("With surplus average degree:", best_surplus_avg_degree_obetas)
-        vertices_obetas, num_edge_obetas, eval_obetas = g.evaluation_metric(best_subgraph_obetas)
-        print("Evaluation metric: ", eval_obetas)
+g.add_edge(1, 2, 400, 0.7)
+g.add_edge(1, 3, 600, 0.6)
+g.add_edge(1, 5, 300, 0.5)
+g.add_edge(1, 6, 600, 0.3)
+g.add_edge(2, 3, 200, 0.4)
+g.add_edge(2, 4, 300, 0.5)
+g.add_edge(3, 4, 100, 0.6)
+g.add_edge(4, 5, 500, 0.4)
+g.add_edge(6, 7, 700, 0.8)
+g.add_edge(6, 8, 800, 0.9)
+g.add_edge(7, 8, 900, 0.9)
+start_time = time.perf_counter()
+best_subgraph_uds, best_density_uds = g.greedy_uds()
+end_time = time.perf_counter()
+execution_time_uds = end_time - start_time
+print("GreedyUDS time: ", execution_time_uds)
+print("Best subgraph from GreedyUDS:")
+g.print_subgraph(best_subgraph_uds)
+print("With expected density:", best_density_uds)
+vertices_uds, num_edge_uds, eval_uds = g.evaluation_metric(best_subgraph_uds)
+print("Evaluation metric: ", eval_uds)
+# beta = 0.7
+# start_time = time.perf_counter()
+# best_subgraph_obetas, best_surplus_avg_degree_obetas = g.greedy_obetas(beta)
+# end_time = time.perf_counter()
+# execution_time_obetas = end_time - start_time
+# print("GreedyUβS time: ", execution_time_obetas)
+# print("Best subgraph from GreedyObetaS:")
+# g.print_subgraph(best_subgraph_obetas)
+# print("With surplus average degree:", best_surplus_avg_degree_obetas)
+# vertices_obetas, num_edge_obetas, eval_obetas = g.evaluation_metric(best_subgraph_obetas)
+# print("Evaluation metric: ", eval_obetas)
+# g = Graph()
+#
+#
+# def read_file(n):
+#     u = []
+#     v = []
+#     w = []
+#     p = []
+#     with open('579138.protein.links.detailed.v12.0.txt', 'r') as f:
+#         lines = f.readlines()
+#         header = lines[0].split()
+#         for line in lines[1:]:
+#             parts = line.split()
+#             u.append(parts[0])
+#             v.append(parts[1])
+#             w.append(float(parts[n]))
+#             p.append(parts[-1])
+#     return u, v, w, p
+#
+#
+# for i in range(2, 9, 1):
+#     g = Graph()
+#     print("*******************************************************")
+#     print(i)
+#     u, v, w, p = read_file(i)
+#     for j in range(len(u)):
+#         if w[j] == 0.0:
+#             w[j] = 0.041 * 1000
+#         g.add_edge(u[j], v[j], w[j], int(p[j]) / 1000)
+#
+#     start_time = time.perf_counter()
+#     best_subgraph_uds, best_density_uds = g.greedy_uds()
+#     end_time = time.perf_counter()
+#     execution_time_uds = end_time - start_time
+#     print("GreedyUDS time: ", execution_time_uds)
+#     print("Best subgraph from GreedyUDS:")
+#     g.print_subgraph(best_subgraph_uds)
+#     print("With expected density:", best_density_uds)
+#     vertices_uds, num_edge_uds, eval_uds = g.evaluation_metric(best_subgraph_uds)
+#     print("Evaluation metric: ", eval_uds)
+#
+#     print("--------------------------------------------------------")
+#     betas = [0.1, 0.2, 0.3, 0.4, 0.6, 0.8]
+#     for beta in betas:
+#         print(beta)
+#         start_time = time.perf_counter()
+#         best_subgraph_obetas, best_surplus_avg_degree_obetas = g.greedy_obetas(beta)
+#         end_time = time.perf_counter()
+#         execution_time_obetas = end_time - start_time
+#         print("GreedyUβS time: ", execution_time_obetas)
+#         print("Best subgraph from GreedyObetaS:")
+#         g.print_subgraph(best_subgraph_obetas)
+#         print("With surplus average degree:", best_surplus_avg_degree_obetas)
+#         vertices_obetas, num_edge_obetas, eval_obetas = g.evaluation_metric(best_subgraph_obetas)
+#         print("Evaluation metric: ", eval_obetas)
 
 
 # print("--------------------------------------------------------")
