@@ -82,7 +82,6 @@ def get_uwds_algorithm(g: Graph, header: list, column_index: int) -> None:
     output_str += "Number of edges: " + str(num_edge_uwds) + "\n"
     output_str += "Subgraph vertices (Total: {}):".format(len(subgraph_dict_uwds)) + "\n"
     output_str += str(subgraph_dict_uwds) + "\n\n"
-    # output_str += "Evaluation metric: " + str(eval_uwds) + "\n"
     output_str += "======================================================\n"
     for key, value in eval_uwds.items():
         output_str += str(key) + ": " + str(value) + "\n"
@@ -115,7 +114,6 @@ def get_bwds_algorithm(g: Graph, b: int, header: list, column_index:int) -> None
     output_str += "Number of edges: " + str(num_edge_bwds) + "\n"
     output_str += "Subgraph vertices (Total: {}):".format(len(subgraph_dict_bwds)) + "\n"
     output_str += str(subgraph_dict_bwds) + "\n\n"
-    # output_str += "Evaluation metric: " + str(eval_bwds) + "\n"
     output_str += "======================================================\n"
     for key, value in eval_bwds.items():
         output_str += str(key) + ": " + str(value) + "\n"

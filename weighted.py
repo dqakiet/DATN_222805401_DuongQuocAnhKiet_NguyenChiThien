@@ -22,7 +22,7 @@ class Graph:
         Adds an edge to the graph with a specified probability.
         :param u: The name of the first vertex.
         :param v: The name of the second vertex.
-        :param w : The weight of the edge connecting vertex u and v
+        :param w : The weighted of the edge connecting vertex u and v
         :param p: The probability of the edge connecting vertex u and v.
         """
         if u not in self.adj_list:
@@ -225,7 +225,7 @@ class Graph:
         max_edges = len(vertices) * (len(vertices) - 1) / 2
         return total_prob / max_edges
 
-    def std_egde_weigh_probability(self, vertices: set[str]) -> float:
+    def std_egde_weighted_probability(self, vertices: set[str]) -> float:
         """
         Calculates the weighted standard deviation of edge probabilities in a subgraph.
         :param vertices: A set of vertices forming the subgraph.
@@ -258,7 +258,7 @@ class Graph:
         """
         eed = self.weighted_expected_edge_density(subgraph)
         aep = self.average_edge_weighted_probability(subgraph)
-        eps = self.std_egde_weigh_probability(subgraph)
+        eps = self.std_egde_weighted_probability(subgraph)
         ar = self.adjoint_logarithmic_reliability(subgraph)
         vertices = len(subgraph)
 
@@ -278,7 +278,7 @@ class Graph:
         metrics_dict = {
             'Weighted Expected Edge Density': round(eed, 3),
             'Average Edge Weighted Probability': round(aep, 3),
-            'The Standard Deviation of Edge Weight Probability': round(eps, 3),
+            'The Standard Deviation of Edge Weighted Probability': round(eps, 3),
             'Adjoint Logarithmic Reliability': round(ar, 3),
         }
         return vertices, subgraph_dict, num_edges, metrics_dict
@@ -296,4 +296,4 @@ class Graph:
                     num_edges += 1
         print("Num Edges:", num_edges)
         print("Average edge probability weighted :", round(self.average_edge_weighted_probability(vertices), 3))
-        print("edge weighted probability std :", round(self.std_egde_weigh_probability(vertices), 3))
+        print("Edge weighted probability std :", round(self.std_egde_weigh_probability(vertices), 3))
