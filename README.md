@@ -19,7 +19,6 @@ The data files must follow a specified format in order for our graph extraction 
 
 ## How can run tool to find subgraph
 
-You can test with my program \
 
 Run for UWDS solution
 ```bash
