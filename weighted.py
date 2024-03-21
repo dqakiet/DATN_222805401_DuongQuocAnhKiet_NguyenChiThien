@@ -264,24 +264,24 @@ class Graph:
 
         num_edges = len(
             {(u, v) for v in subgraph for u, _, _ in self.adj_list[v] if u in subgraph and v in subgraph and u > v})
-
+        # print("Subgraph vertices (Total: {}):".format(len(subgraph)), subgraph)
+        # num_edges = len(
+        #     {(u, v) for v in subgraph for u, _, _ in self.adj_list[v] if u in subgraph and v in subgraph and u > v})
+        subgraph_dict = {vertex: [] for vertex in subgraph}
+        for vertex in subgraph:
+            for neighbor, weight, prob in self.adj_list[vertex]:
+                if neighbor in subgraph:
+                    subgraph_dict[vertex].append((neighbor, weight, prob))
+        #
+        # print("Subgraph vertices (Total: {}):".format(len(subgraph)))
+        # print(len(subgraph_dict))
         metrics_dict = {
             'Weighted Expected Edge Density': round(eed, 3),
-            'Average Edge-Weighted Probability': round(aep, 3),
+            'Average Edge Weighted Probability': round(aep, 3),
             'The Standard Deviation of Edge Weight Probability': round(eps, 3),
             'Adjoint Logarithmic Reliability': round(ar, 3),
         }
-        return vertices, num_edges, metrics_dict
-
-    def print_subgraph(self, vertices: set[str]) -> None:
-        """
-        Prints details of a subgraph including its vertices and edges.
-        :param vertices: A set of vertices forming the subgraph.
-        """
-        print("Subgraph vertices (Total: {}):".format(len(vertices)), vertices)
-        num_edges = len(
-            {(u, v) for v in vertices for u, _, _ in self.adj_list[v] if u in vertices and v in vertices and u > v})
-        print("Num Edges:", num_edges)
+        return vertices, subgraph_dict, num_edges, metrics_dict
 
     def print_summarize_graph(self):
         """
