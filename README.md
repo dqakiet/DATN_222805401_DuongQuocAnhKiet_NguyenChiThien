@@ -1,9 +1,10 @@
 # Finding the Highly Reliable Densest Subgraph from an Uncertain Weighted Graph
 
+## Getting started
+ In this project you can run this tool to find the highly reliable densest subgraph from an Uncertain Weighted Graph.
 
-## Installation
+## main.py
 
-main.py \
 This script allows users to input parameters and datasets in order to execute the appropriate graph mining method. The script enables the application of algorithms to specific to users data and provides the results.
 
 ## File Format
@@ -16,17 +17,22 @@ The data files must follow a specified format in order for our graph extraction 
 •	Probability Column: The file's last column must show the probability of each edge's existence in the uncertain weighted graph. \
 •	Column Separator: Each column should be separated by a space (" "), ensuring that different information components are clearly defined.
 
-## Usage
+## How can run tool to find subgraph
 
-You can test with my program
+You can test with my program \
 
+Run for UWDS solution
 ```bash
-# Use for UWDS solution
-
 python main.py ./dataset/579138.protein.links.detailed.v12.0.txt 1 uwds 3 
-# Or for BWDS solution
-
+```
+Run for BWDS solution
+```bash
 python main.py ./dataset/579138.protein.links.detailed.v12.0.txt 1 bwds 3 0.5
-
 ```
 
+## Results
+When the main.py script is executed with the required parameters, our program not only displays the results in the Command Line Interface (CLI), but also saves them in a separate file in the “results” folder. This dual strategy to result distribution is essential for both right away evaluation and long-term storage of research results. \
+The result file methodically includes different aspects of the mining subgraph, including: \
+•	The vertices of the subgraph. \
+•	The edges connecting these vertices, in with their weights and probabilities. \
+•	Metrics including subgraph density, dependability indices, and other important statistical measures have been computed
