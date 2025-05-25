@@ -18,7 +18,12 @@ The data files must follow a specified format in order for our graph extraction 
 •	Column Separator: Each column should be separated by a space (" "), ensuring that different information components are clearly defined.
 
 ## How can run tool to find subgraph
+Syntax for run solution
+python main.py [filename] [data_type] [algorithm] [column_index] [k] [b] [lambda (use in GreedyBWDS-O)]
 
+with k is number of subgraph for finding top-k 
+b is bound parameter for BWDS, BWDS-D, BWDS-O algorithm
+lambda is parameter for cost overlap
 
 Run for UWDS solution
 ```bash
@@ -28,6 +33,14 @@ Run for BWDS solution
 ```bash
 python main.py ./dataset/579138.protein.links.detailed.v12.0.txt 1 bwds 3 0.5
 ```
+Run for BWDS-D solution
+```bash
+python main.py ./dataset/579138.protein.links.detailed.v12.0.txt 1 bwds_disjoint 3 0.5
+```
+Run for BWDS-O solution
+```bash
+python main.py ./dataset/579138.protein.links.detailed.v12.0.txt 1 bwds_overlap 2 3 0.5 0.6
+```
 
 ## Results
 When the main.py script is executed with the required parameters, our program not only displays the results in the Command Line Interface (CLI), but also saves them in a separate file in the “results” folder. This dual strategy to result distribution is essential for both right away evaluation and long-term storage of research results. \
@@ -35,3 +48,4 @@ The result file methodically includes different aspects of the mining subgraph, 
 •	The vertices of the subgraph. \
 •	The edges connecting these vertices, in with their weights and probabilities. \
 •	Metrics including subgraph density, dependability indices, and other important statistical measures have been computed
+

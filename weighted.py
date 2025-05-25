@@ -135,6 +135,94 @@ class Graph:
 
         return best_subgraph, round(best_excess_avg_degree, 3)
 
+
+    def greedy_bwds_disjoint(self, k: int, bound: float) -> list[tuple[set[str], float]]:
+        import copy
+        remaining_adj_list = copy.deepcopy(self.adj_list)
+        result = []
+
+        tmp_graph = Graph()
+        tmp_graph.adj_list = remaining_adj_list
+
+        for _ in range(k):
+            if len(tmp_graph.adj_list) < 2:
+                break
+            subgraph, score = tmp_graph.greedy_bwds(bound)
+            if not subgraph:
+                break
+            num_edges = 0
+            for v in subgraph:
+                for u, _, _ in tmp_graph.adj_list[v]:
+                    if u in subgraph and u > v:
+                        num_edges += 1
+            if num_edges == 0:
+                break  
+            result.append((subgraph, score))
+            for v in subgraph:
+                if v in tmp_graph.adj_list:
+                    tmp_graph.remove_vertex(v, tmp_graph.adj_list)
+        return result
+
+    def greedy_bwds_overlap(self, k: int, bound: float, lam: float) -> list[tuple[set[str], float]]:
+        selected = []
+        used_vertices = set()
+
+        for _ in range(k):
+            temp_adj_list = {v: edges.copy() for v, edges in self.adj_list.items()}
+            verts = set(temp_adj_list.keys())
+            best_subgraph = set()
+            best_score = -float('inf')
+
+            heap = []
+            marker = {}
+            current_marker = 0
+
+            def penalized_excess_degree(v: str) -> float:
+                base = self.get_excess_degree(v, bound, temp_adj_list)
+                penalty = lam * self.get_weighted_expected_degree(v, temp_adj_list) if v in used_vertices else 0.0
+                return base - penalty
+
+            for v in verts:
+                heapq.heappush(heap, (penalized_excess_degree(v), v, current_marker))
+                marker[v] = current_marker
+
+            while len(verts) >= 2:
+                current_val = self.get_excess_average_degree(verts, bound, temp_adj_list)
+                current_val -= lam * len(verts & used_vertices) / max(len(verts), 1)
+                if current_val > best_score:
+                    best_score = current_val
+                    best_subgraph = set(verts)
+
+                while heap:
+                    ed, v_rm, m = heapq.heappop(heap)
+                    if v_rm in verts and marker[v_rm] == m:
+                        verts.remove(v_rm)
+                        break
+
+                neighbors = [nbr for nbr, _, _ in temp_adj_list[v_rm]]
+                self.remove_vertex(v_rm, temp_adj_list)
+
+                current_marker += 1
+                for nbr in neighbors:
+                    if nbr in verts:
+                        heapq.heappush(heap, (penalized_excess_degree(nbr), nbr, current_marker))
+                        marker[nbr] = current_marker
+
+            if not best_subgraph or len(best_subgraph) == 0:
+                break
+            num_edges = 0
+            for v in best_subgraph:
+                for u, _, _ in self.adj_list[v]:
+                    if u in best_subgraph and u > v:
+                        num_edges += 1
+            if num_edges == 0:
+                break  
+
+            selected.append((best_subgraph, round(best_score, 3)))
+            used_vertices.update(best_subgraph)
+
+        return selected
+
     def greedy_uwds(self) -> tuple[set[str], float]:
         """
         Applies a greedy algorithm to find the subgraph with the highest expected edge density.
@@ -155,6 +243,32 @@ class Graph:
             vertices.remove(v)
 
         return best_subgraph, round(best_density, 3)
+
+    def greedy_uwds_disjoint(self, k: int) -> list[tuple[set[str], float]]:
+        import copy
+        remaining_adj_list = copy.deepcopy(self.adj_list)
+        result = []
+        tmp_graph = Graph()
+        tmp_graph.adj_list = remaining_adj_list
+        for _ in range(k):
+            if len(tmp_graph.adj_list) < 2:
+                break
+            subgraph, score = tmp_graph.greedy_uwds()
+            if not subgraph:
+                break
+            num_edges = 0
+            for v in subgraph:
+                for u, _, _ in tmp_graph.adj_list[v]:
+                    if u in subgraph and u > v:
+                        num_edges += 1
+            if num_edges == 0:
+                break
+            result.append((subgraph, score))
+            for v in subgraph:
+                if v in tmp_graph.adj_list:
+                    tmp_graph.remove_vertex(v, tmp_graph.adj_list)
+        return result
+
 
     def brute_force_search(self) -> tuple[set[str], float]:
         """
@@ -299,10 +413,11 @@ class Graph:
         num_edges = 0
         vertices = set(self.adj_list.keys())
         print("Graph vertices (Total: {}):".format(len(vertices)))
-        for v in vertices:
-            for u, _, _ in self.adj_list[v]:
-                if u in vertices and u > v:
-                    num_edges += 1
+        num_edges = len(
+            {(u, v) for v in vertices for u, _, _ in self.adj_list[v] if u in vertices and v in vertices and u > v})
         print("Num Edges:", num_edges)
+        print("Weighted Expected Edge Density :", round(self.weighted_expected_edge_density(vertices), 3))
         print("Average edge probability weighted :", round(self.average_edge_weighted_probability(vertices), 3))
-        print("edge weighted probability std :", round(self.std_egde_weigh_probability(vertices), 3))
+        print("The Standard Deviation of Edge Weight Probability:", round(self.std_egde_weigh_probability(vertices), 3))
+        print("Adjoint Logarithmic Reliability:", round(self.adjoint_logarithmic_reliability(vertices), 3))
+        print("Object Function: ",round(self.object_function(vertices), 3))
